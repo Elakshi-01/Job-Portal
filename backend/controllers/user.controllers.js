@@ -117,7 +117,7 @@ export const login = async (req, res) => {
 
         return res.status(200).cookie("token", token, {
             maxAge: 1 * 24 * 60 * 60 * 1000,
-            httpsOnly: true,
+            httpOnly: true,
             sameSite: 'strict'
         }).json({
             message: `Welcome back ${user.fullname}`,
@@ -164,18 +164,19 @@ export const updateProfile = async (req, res) => {
         const { fullname, email, phoneNumber, bio, skills } = req.body;
         const file = req.file;
 
-        if (!fullname || !email || !phoneNumber || !bio || !skills) {
 
-            return res.status(400).json({
-                message: "All fields are required",
-                success: false
-            })
-        }
 
 
         // cloudinary for files
+          let  skillsArray;
 
-        const skillsArray = skills.split(",");
+        if(skills){
+
+            
+         skillsArray = skills.split(",");
+
+        }
+
 
         const userId = req.id; // middleware authentication
 
@@ -190,11 +191,39 @@ export const updateProfile = async (req, res) => {
         }
 
         // updataing user
-        user.fullname = fullname;
-        user.email = email;
-        user.bio = bio;
-        user.profile.skills = skillsArray;
-        user.profile.phoneNumber = phoneNumber;
+
+        if (fullname) {
+
+            user.fullname = fullname;
+
+        }
+
+
+        if (email) {
+
+            user.email = email;
+        }
+
+
+        if (bio) {
+
+            user.bio = bio;
+
+        }
+
+        if (skills) {
+
+            user.profile.skills = skillsArray;
+        }
+
+
+
+        if (phoneNumber) {
+
+            user.profile.phoneNumber = phoneNumber;
+        }
+
+
 
 
         // resume comes later here
