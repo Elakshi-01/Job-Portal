@@ -49,6 +49,11 @@ const jobSchema = new Schema(
             required :true
         },
 
+          experienceLevel :{
+            type : Number,
+            required :true
+        },
+
         
         company :{
             type : mongoose.Schema.Types.ObjectId,
