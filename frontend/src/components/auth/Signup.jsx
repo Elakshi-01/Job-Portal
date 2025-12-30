@@ -5,11 +5,11 @@ import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { toast } from "../ui/sonner";
+import { toast } from "sonner"; // ✅ FIX IMPORT
 import { USER_API_END_POINT } from "../../utils/constant";
 import { setLoading } from "@/redux/authSlice";
 import { Loader2 } from "lucide-react";
-import { useSelector,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 
 const Signup = () => {
   const [input, setInput] = useState({
@@ -18,12 +18,11 @@ const Signup = () => {
     phoneNumber: "",
     password: "",
     role: "",
-    file: "",
+    file: null,
   });
 
-  
   const { loading } = useSelector((store) => store.auth);
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const changeEventHandler = (e) => {
@@ -31,11 +30,16 @@ const Signup = () => {
   };
 
   const changeFileHandler = (e) => {
-    setInput({ ...input, file: e.target.files?.[0] });
+    setInput({ ...input, file: e.target.files[0] });
   };
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
+    if (!input.role) {
+      toast.error("Please select a role");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("fullname", input.fullname);
@@ -45,18 +49,18 @@ const Signup = () => {
     formData.append("phoneNumber", input.phoneNumber);
 
     if (input.file) {
-      formData.append("file", input.file);
+      formData.append("file", input.file); // ✅ matches multer
     }
 
     try {
-
-    dispatch(setLoading(true))
-
+      dispatch(setLoading(true));
 
       const res = await axios.post(
         `${USER_API_END_POINT}/register`,
         formData,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+        }
       );
 
       if (res.data.success) {
@@ -68,10 +72,9 @@ const Signup = () => {
       toast.error(
         error?.response?.data?.message || "Signup failed"
       );
+    } finally {
+      dispatch(setLoading(false));
     }
-  finally{
-        dispatch(setLoading(false))
-  }
   };
 
   return (
@@ -149,7 +152,7 @@ const Signup = () => {
             </div>
 
             <div>
-              <Label>Profile</Label>
+              <Label>Profile Photo</Label>
               <Input
                 type="file"
                 accept="image/*"
@@ -158,19 +161,16 @@ const Signup = () => {
             </div>
           </div>
 
-       
-
-                {loading ? (
+          {loading ? (
             <Button className="w-full my-4" disabled>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Please wait
             </Button>
           ) : (
-              <Button className="w-full my-4" type="submit">
-            Signup
-          </Button>
+            <Button className="w-full my-4" type="submit">
+              Signup
+            </Button>
           )}
-
 
           <p className="text-sm">
             Already have an account?{" "}

@@ -8,7 +8,7 @@ import { toast } from "../ui/sonner";
 import axios from "axios";
 import { USER_API_END_POINT } from "../../utils/constant";
 import { useDispatch, useSelector } from "react-redux";
-import { setLoading } from "@/redux/authSlice";
+import { setLoading, setUser } from "@/redux/authSlice";
 import { Loader2 } from "lucide-react";
 
 const Login = () => {
@@ -28,10 +28,15 @@ const Login = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
+    if (!input.role) {
+      toast.error("Please select role");
+      return;
+    }
+
     dispatch(setLoading(true));
 
     try {
-      dispatch(setLoading)
       const res = await axios.post(
         `${USER_API_END_POINT}/login`,
         input,
@@ -39,8 +44,7 @@ const Login = () => {
       );
 
       if (res.data.success) {
-        
-dispatch(setUser(res.data.user));
+        dispatch(setUser(res.data.user));
         toast.success(res.data.message);
         navigate("/");
       }
@@ -69,6 +73,7 @@ dispatch(setUser(res.data.user));
               name="email"
               value={input.email}
               onChange={changeEventHandler}
+              required
             />
           </div>
 
@@ -79,6 +84,7 @@ dispatch(setUser(res.data.user));
               name="password"
               value={input.password}
               onChange={changeEventHandler}
+              required
             />
           </div>
 

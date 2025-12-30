@@ -1,5 +1,11 @@
-import multer from "multer"
+  import multer from "multer";
 
-const storage = multer.memoryStorage();
+  // Memory storage
+  const storage = multer.memoryStorage();
 
-export const singleUpload = multer(storage).single("file");
+  export const singleUpload = multer({
+    storage,
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB
+    },
+  }).single("resume"); // ✅ match the frontend formData key
