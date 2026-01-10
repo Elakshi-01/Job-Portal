@@ -30,7 +30,7 @@ const {user} = useSelector( store => store.auth)
 
   return (
     <div>
-      <Navbar />
+      
 
       <div className="bg-white border border-gray-200 my-5 p-8 rounded-2xl mx-auto max-w-4xl">
         {/* Top Section */}

@@ -1,54 +1,49 @@
-import React from 'react'
-import { Badge } from './ui/badge'
+import React from "react";
+import { Badge } from "./ui/badge";
 
-const LatestJobCards = () => {
+const LatestJobCards = ({ job }) => {
   return (
+    <div className="shadow-xl bg-white border border-gray-100 cursor-pointer p-5 rounded-md hover:shadow-2xl transition">
 
+      {/* Company Name & Location */}
+      <div>
+        <h1 className="text-lg font-medium">
+          {job?.company?.name || "Unknown Company"}
+        </h1>
+        <p className="text-gray-500 text-sm">
+          {job?.location || "India"}
+        </p>
+      </div>
 
-<div   className='shadow-xl bg-white border border-gray-100 cursor-pointer p-5 rounded-md '            >
+      {/* Job Title & Description */}
+      <div>
+        <h1 className="font-bold text-lg my-2">
+          {job?.title}
+        </h1>
+        <p className="text-sm text-gray-600 line-clamp-2">
+          {job?.description}
+        </p>
+      </div>
 
-<div>
-  <h1    className='text-lg font-medium'         >Company Name</h1>
-<p  className='text-gray-500 text-sm'        >India</p>
-</div>
+      {/* Job Details */}
+      <div className="flex items-center gap-2 mt-4 flex-wrap">
 
-<div>
+        <Badge variant="ghost" className="font-bold text-blue-700">
+          {job?.positions} Positions
+        </Badge>
 
-    <h1  className='font-bold text-lg my-2'            >Job Title</h1>
-    <p    className='text-sm text-gr'         >Lorem ipsum dolor sit amet consectetur adipisicing elit.   Lorem ipsum dolor sit amet.      </p>
-</div>
+        <Badge variant="ghost" className="font-bold text-[#F83002]">
+          {job?.jobType}
+        </Badge>
 
+        <Badge variant="ghost" className="font-bold text-[#7209b7]">
+          {job?.salary} LPA
+        </Badge>
 
+      </div>
+    </div>
+  );
+};
 
-
-
-<div   className='flex items-center gap-2 mt-4 '          >
-
-
-<Badge    className='font-bold text-blue-700'     variant="ghost"    >       
-    12 Positions
-</Badge>
-
-<Badge    className='font-bold text-[#F83002]'     variant="ghost"    >       
-    Part Time
-</Badge>
-
-<Badge    className='font-bold text-[#7209b7]'     variant="ghost"    >       
-    24LPA
-</Badge>
-
-
-</div>
-
-
-
-
-
-</div>
-
-
-
-  )
-}
-
-export default LatestJobCards
+export default LatestJobCards;
+ 

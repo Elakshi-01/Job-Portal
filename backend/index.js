@@ -13,7 +13,7 @@ dotenv.config();
 
 const app = express();
 
-// ✅ MIDDLEWARE (ORDER MATTERS)
+/* ---------------- MIDDLEWARE ---------------- */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -25,17 +25,21 @@ app.use(
   })
 );
 
-// ✅ ROUTES
+/* ---------------- ROUTES ---------------- */
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/company", companyRoute);
 app.use("/api/v1/job", jobRoute);
 app.use("/api/v1/application", applicationRoute);
 
+/* ---------------- SERVER ---------------- */
 const PORT = process.env.PORT || 8000;
 
-// ✅ START SERVER AFTER DB CONNECT
-connectdb().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+connectdb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ DB connection failed:", err);
   });
-});

@@ -16,7 +16,6 @@ export const register = async (req, res) => {
       });
     }
 
-    // check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -25,7 +24,6 @@ export const register = async (req, res) => {
       });
     }
 
-    // upload profile photo (OPTIONAL)
     let profilePhoto = "";
     if (req.file) {
       const fileUri = getDataUri(req.file);
@@ -43,9 +41,7 @@ export const register = async (req, res) => {
       password: hashedPassword,
       phoneNumber,
       role,
-      profile: {
-        profilePhoto,
-      },
+      profile: { profilePhoto },
     });
 
     return res.status(201).json({
@@ -53,7 +49,7 @@ export const register = async (req, res) => {
       success: true,
     });
   } catch (error) {
-    console.log("REGISTER ERROR:", error);
+    console.error("REGISTER ERROR:", error);
     return res.status(500).json({
       message: "Something went wrong",
       success: false,
@@ -81,7 +77,10 @@ export const login = async (req, res) => {
       });
     }
 
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    const isPasswordMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
     if (!isPasswordMatch) {
       return res.status(400).json({
         message: "Incorrect email or password",
@@ -96,9 +95,10 @@ export const login = async (req, res) => {
       });
     }
 
+    // ✅ FIXED: correct env key
     const token = jwt.sign(
       { userId: user._id },
-      process.env.SECRET_KEY,
+      process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
@@ -107,7 +107,8 @@ export const login = async (req, res) => {
       .cookie("token", token, {
         maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax", // ✅ IMPORTANT
+        secure: false,   // true only in HTTPS
       })
       .json({
         message: `Welcome back ${user.fullname}`,
@@ -122,7 +123,7 @@ export const login = async (req, res) => {
         },
       });
   } catch (error) {
-    console.log("LOGIN ERROR:", error);
+    console.error("LOGIN ERROR:", error);
     return res.status(500).json({
       message: "Something went wrong",
       success: false,
@@ -134,15 +135,24 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   return res
     .status(200)
-    .cookie("token", "", { maxAge: 0 })
-    .json({ message: "Logged out successfully", success: true });
+    .cookie("token", "", {
+      maxAge: 0,
+      httpOnly: true,
+      sameSite: "lax",
+    })
+    .json({
+      message: "Logged out successfully",
+      success: true,
+    });
 };
 
 /* ================= UPDATE PROFILE ================= */
 export const updateProfile = async (req, res) => {
   try {
     const { fullname, email, phoneNumber, bio, skills } = req.body;
-    const userId = req.id;
+
+    // ✅ FIXED: correct user id
+    const userId = req.userId;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -152,7 +162,6 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // update basic fields
     if (fullname) user.fullname = fullname;
     if (email) user.email = email;
     if (phoneNumber) user.phoneNumber = phoneNumber;
@@ -166,7 +175,6 @@ export const updateProfile = async (req, res) => {
         .map((skill) => skill.trim());
     }
 
-    // resume upload (OPTIONAL)
     if (req.file) {
       const fileUri = getDataUri(req.file);
       const cloudResponse = await cloudinary.uploader.upload(
@@ -184,7 +192,7 @@ export const updateProfile = async (req, res) => {
       user,
     });
   } catch (error) {
-    console.log("UPDATE PROFILE ERROR:", error);
+    console.error("UPDATE PROFILE ERROR:", error);
     return res.status(500).json({
       message: "Something went wrong",
       success: false,

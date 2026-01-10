@@ -1,55 +1,126 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "./ui/shared/Navbar";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import { setSingleJob } from "@/redux/jobSlice.js";
+import {
+  APPLICATION_API_END_POINT,
+  JOB_API_END_POINT,
+} from "@/utils/constant";
+import { useDispatch, useSelector } from "react-redux";
 
 const JobDescription = () => {
-  const [isApplied, setIsApplied] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { id: jobId } = useParams();
+  const dispatch = useDispatch();
 
+  const { singleJob } = useSelector((store) => store.job);
+  const { user } = useSelector((store) => store.auth);
+
+  const [loading, setLoading] = useState(false); // ✅ FIX
+  const [isApplied, setIsApplied] = useState(false);
+
+  /* ================= FETCH JOB ================= */
+  useEffect(() => {
+    const fetchSingleJob = async () => {
+      try {
+        const res = await axios.get(
+          `${JOB_API_END_POINT}/get/${jobId}`,
+          { withCredentials: true }
+        );
+
+        if (res.data.success) {
+          dispatch(setSingleJob(res.data.job));
+
+        
+          setIsApplied(res.data.job.applications.some(application => application.applicant == user?._id));
+        }
+      } catch (error) {
+        toast.error("Failed to load job details");
+      }
+    };
+
+    if (jobId) fetchSingleJob();
+  }, [jobId, dispatch, user]);
+
+  /* ================= APPLY JOB ================= */
   const applyJobHandler = async () => {
     if (isApplied) return;
 
     try {
       setLoading(true);
 
-      // 🔜 API call will go here
-      // await axios.post(`/apply/job/${jobId}`)
+      const res = await axios.get(
+        `${APPLICATION_API_END_POINT}/apply/${jobId}`,
+        { withCredentials: true }
+      );
 
-      setIsApplied(true);
-      toast.success("Successfully applied for the job");
+      if (res.data.success) {
+        setIsApplied(true);
+
+        dispatch(
+          setSingleJob({
+            ...singleJob,
+            applications: [
+              ...singleJob.applications,
+              { applicant: { _id: user._id } },
+            ],
+          })
+        );
+
+        toast.success(res.data.message);
+      }
     } catch (error) {
-      toast.error("Failed to apply");
+      toast.error(
+        error?.response?.data?.message || "Failed to apply"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  /* ================= DATE FORMAT ================= */
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
     <div>
-      <Navbar />
+      
 
       <div className="max-w-7xl mx-auto my-10 px-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* HEADER */}
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
           <div>
-            <h1 className="font-bold text-2xl mb-2">Frontend Developer</h1>
+            <h1 className="font-bold text-2xl mb-2">
+              {singleJob?.title || "Job Title"}
+            </h1>
 
-            <div className="flex items-center gap-3">
+            <div className="flex gap-3 flex-wrap">
               <Badge variant="ghost" className="text-blue-700 font-bold">
-                12 Positions
+                {singleJob?.positions
+                  ? `${singleJob.positions} Position${
+                      singleJob.positions > 1 ? "s" : ""
+                    }`
+                  : "N/A"}
               </Badge>
+
               <Badge variant="ghost" className="text-[#F83002] font-bold">
-                Part Time
+                {singleJob?.jobType || "N/A"}
               </Badge>
+
               <Badge variant="ghost" className="text-[#7209b7] font-bold">
-                24 LPA
+                {singleJob?.salary
+                  ? `${singleJob.salary} LPA`
+                  : "N/A"}
               </Badge>
             </div>
           </div>
 
-          {/* Apply Button */}
+          {/* APPLY BUTTON */}
           <Button
             onClick={applyJobHandler}
             disabled={isApplied || loading}
@@ -67,23 +138,40 @@ const JobDescription = () => {
           </Button>
         </div>
 
-        {/* Divider */}
-        <h1 className="border-b-2 border-gray-300 font-medium py-4 mt-8">
+        {/* DESCRIPTION */}
+        <h2 className="border-b-2 border-gray-300 font-medium py-4 mt-8">
           Job Description
-        </h1>
+        </h2>
 
-        {/* Details */}
         <div className="my-4 space-y-2 text-sm">
-          <p><strong>Role:</strong> Frontend Developer</p>
-          <p><strong>Location:</strong> Hyderabad</p>
           <p>
-            <strong>Description:</strong> Lorem ipsum dolor sit amet consectetur
-            adipisicing elit.
+            <strong>Role:</strong> {singleJob?.title || "N/A"}
           </p>
-          <p><strong>Experience:</strong> 2 yrs</p>
-          <p><strong>Salary:</strong> 12 LPA</p>
-          <p><strong>Total Applicants:</strong> 4</p>
-          <p><strong>Posted Date:</strong> 17-07-2024</p>
+          <p>
+            <strong>Location:</strong> {singleJob?.location || "N/A"}
+          </p>
+          <p>
+            <strong>Description:</strong>{" "}
+            {singleJob?.description || "No description available"}
+          </p>
+          <p>
+            <strong>Experience:</strong>{" "}
+            {singleJob?.experienceLevel || "N/A"}
+          </p>
+          <p>
+            <strong>Salary:</strong>{" "}
+            {singleJob?.salary
+              ? `${singleJob.salary} LPA`
+              : "N/A"}
+          </p>
+          <p>
+            <strong>Total Applicants:</strong>{" "}
+            {singleJob?.applications?.length || 0}
+          </p>
+          <p>
+            <strong>Posted Date:</strong>{" "}
+            {formatDate(singleJob?.createdAt)}
+          </p>
         </div>
       </div>
     </div>
