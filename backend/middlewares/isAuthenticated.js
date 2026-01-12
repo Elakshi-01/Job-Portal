@@ -1,33 +1,38 @@
 import jwt from "jsonwebtoken";
+import User from "../models/user.model.js";
 
-const isAuthenticated = (req, res, next) => {
+const isAuthenticated = async (req, res, next) => {
   try {
     const token = req.cookies?.token;
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "User not authenticated",
+        message: "Authentication required",
       });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (!decoded) {
+    const user = await User.findById(decoded.userId).select("-password");
+
+    if (!user) {
       return res.status(401).json({
         success: false,
-        message: "Invalid token",
+        message: "User not found",
       });
     }
 
-    // ✅ STANDARD
-    req.userId = decoded.userId;
+    // ✅ ATTACH EVERYTHING NEEDED
+    req.user = user;
+    req.userId = user._id;
+    req.userRole = user.role; // 🔥 CRITICAL FIX
+
     next();
   } catch (error) {
-    console.error("Auth error:", error.message);
     return res.status(401).json({
       success: false,
-      message: "Authentication failed",
+      message: "Invalid token",
     });
   }
 };

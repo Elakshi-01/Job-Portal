@@ -10,25 +10,9 @@ import { singleUpload } from "../middlewares/multer.js";
 
 const router = express.Router();
 
-// ✅ ADD multer to REGISTER (profile photo upload)
-router.post(
-  "/register",
-  singleUpload, // expects field name "file"
-  register
-);
-
-// ✅ LOGIN (no file)
+router.post("/register", singleUpload, register);
 router.post("/login", login);
-
-// ✅ UPDATE PROFILE
-router.post(
-  "/profile/update",
-  isAuthenticated,
-  singleUpload,
-  updateProfile
-);
-
-// ✅ LOGOUT
+router.post("/profile/update", isAuthenticated, singleUpload, updateProfile);
 router.get("/logout", logout);
 
 export default router;
