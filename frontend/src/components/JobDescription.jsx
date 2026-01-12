@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import Navbar from "./ui/shared/Navbar";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { setSingleJob } from "@/redux/jobSlice.js";
+import { useDispatch, useSelector } from "react-redux";
+
+import { setSingleJob } from "@/redux/jobSlice";
 import {
   APPLICATION_API_END_POINT,
   JOB_API_END_POINT,
 } from "@/utils/constant";
-import { useDispatch, useSelector } from "react-redux";
 
 const JobDescription = () => {
   const { id: jobId } = useParams();
@@ -19,7 +19,7 @@ const JobDescription = () => {
   const { singleJob } = useSelector((store) => store.job);
   const { user } = useSelector((store) => store.auth);
 
-  const [loading, setLoading] = useState(false); // ✅ FIX
+  const [loading, setLoading] = useState(false);
   const [isApplied, setIsApplied] = useState(false);
 
   /* ================= FETCH JOB ================= */
@@ -34,8 +34,12 @@ const JobDescription = () => {
         if (res.data.success) {
           dispatch(setSingleJob(res.data.job));
 
-        
-          setIsApplied(res.data.job.applications.some(application => application.applicant == user?._id));
+          if (user && res.data.job.applications) {
+            const applied = res.data.job.applications.some(
+              (app) => app.applicant?.toString() === user._id
+            );
+            setIsApplied(applied);
+          }
         }
       } catch (error) {
         toast.error("Failed to load job details");
@@ -47,6 +51,11 @@ const JobDescription = () => {
 
   /* ================= APPLY JOB ================= */
   const applyJobHandler = async () => {
+    if (!user) {
+      toast.error("Please login to apply");
+      return;
+    }
+
     if (isApplied) return;
 
     try {
@@ -64,8 +73,8 @@ const JobDescription = () => {
           setSingleJob({
             ...singleJob,
             applications: [
-              ...singleJob.applications,
-              { applicant: { _id: user._id } },
+              ...(singleJob?.applications || []),
+              { applicant: user._id },
             ],
           })
         );
@@ -81,7 +90,6 @@ const JobDescription = () => {
     }
   };
 
-  /* ================= DATE FORMAT ================= */
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
@@ -89,7 +97,7 @@ const JobDescription = () => {
 
   return (
     <div>
-      
+  
 
       <div className="max-w-7xl mx-auto my-10 px-4">
         {/* HEADER */}
@@ -124,7 +132,7 @@ const JobDescription = () => {
           <Button
             onClick={applyJobHandler}
             disabled={isApplied || loading}
-            className={`rounded-lg px-6 transition-all ${
+            className={`rounded-lg px-6 ${
               isApplied
                 ? "bg-gray-600 cursor-not-allowed"
                 : "bg-[#7209b7] hover:bg-[#5f08a8]"
@@ -152,7 +160,7 @@ const JobDescription = () => {
           </p>
           <p>
             <strong>Description:</strong>{" "}
-            {singleJob?.description || "No description available"}
+            {singleJob?.description || "N/A"}
           </p>
           <p>
             <strong>Experience:</strong>{" "}

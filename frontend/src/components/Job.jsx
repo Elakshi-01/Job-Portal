@@ -8,34 +8,41 @@ import { useNavigate } from "react-router-dom";
 const Job = ({ job }) => {
   const navigate = useNavigate();
 
-  // Use actual job ID
-  const jobId = job?._id;
-
-  // Format posted date (example: 2 days ago)
+  // Calculate days ago
   const postedDate = new Date(job?.createdAt);
-  const daysAgo = Math.floor((Date.now() - postedDate) / (1000 * 60 * 60 * 24));
+  const daysAgo = Math.floor(
+    (Date.now() - postedDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
   return (
     <div className="rounded-xl p-5 shadow-md bg-white border border-gray-100 flex flex-col justify-between">
-
-      {/* Top row */}
+      
+      {/* Top */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">
-          {daysAgo >= 0 ? `${daysAgo} day${daysAgo !== 1 ? "s" : ""} ago` : "Recently"}
+          {daysAgo >= 0
+            ? `${daysAgo} day${daysAgo !== 1 ? "s" : ""} ago`
+            : "Recently"}
         </p>
+
         <Button variant="outline" size="icon" className="rounded-full">
           <Bookmark className="w-4 h-4" />
         </Button>
       </div>
 
-      {/* Company info */}
+      {/* Company */}
       <div className="flex items-center gap-3 my-4">
         <Avatar className="w-10 h-10">
-          {job?.company?.logoUrl ? (
-            <AvatarImage src={job.company.logoUrl} alt={job.company.name} />
+          {job?.company?.logo ? (
+            <AvatarImage
+              src={job.company.logo}
+              alt={job.company.name}
+            />
           ) : (
             <AvatarFallback>
-              {job?.company?.name ? job.company.name.charAt(0) : "C"}
+              {job?.company?.name
+                ? job.company.name.charAt(0)
+                : "C"}
             </AvatarFallback>
           )}
         </Avatar>
@@ -44,34 +51,41 @@ const Job = ({ job }) => {
           <h1 className="font-semibold text-lg">
             {job?.company?.name || "Unknown Company"}
           </h1>
-          <p className="text-sm text-gray-500">{job?.location || "Unknown Location"}</p>
+          <p className="text-sm text-gray-500">
+            {job?.location || "Unknown Location"}
+          </p>
         </div>
       </div>
 
-      {/* Job details */}
+      {/* Job Info */}
       <div className="flex-1">
-        <h2 className="font-bold text-lg mb-2">{job?.title || "Job Title"}</h2>
-        <p className="text-sm text-gray-600 leading-relaxed">
-          {job?.description || "No description available."}
+        <h2 className="font-bold text-lg mb-2">
+          {job?.title || "Job Title"}
+        </h2>
+        <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+          {job?.description || "No description available"}
         </p>
       </div>
 
-      {/* Badges */}
+      {/* Tags */}
       <div className="flex flex-wrap gap-2 mt-4">
         <Badge variant="ghost" className="font-semibold text-blue-700">
-          {job?.positions || 1} Position{job?.position > 1 ? "s" : ""}
+          {job?.positions || 1} Position
+          {job?.positions > 1 ? "s" : ""}
         </Badge>
+
         <Badge variant="ghost" className="font-semibold text-red-500">
           {job?.jobType || "Full Time"}
         </Badge>
+
         <Badge variant="ghost" className="font-semibold text-purple-700">
           {job?.salary ? `${job.salary} LPA` : "N/A"}
-        </Badge> 
+        </Badge>
       </div>
 
-      {/* Buttons */}
+      {/* Actions */}
       <div className="flex flex-col gap-3 mt-5">
-        <Button 
+        <Button
           variant="outline"
           className="w-full"
           onClick={() => navigate(`/description/${job?._id}`)}

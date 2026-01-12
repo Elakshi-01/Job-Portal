@@ -17,14 +17,16 @@ const Navbar = () => {
 
   const logoutHandler = async () => {
     try {
-      const res = await axios.get(`${USER_API_END_POINT}/logout`, { withCredentials: true });
+      const res = await axios.get(`${USER_API_END_POINT}/logout`, {
+        withCredentials: true,
+      });
+
       if (res.data.success) {
         dispatch(setUser(null));
-        toast.success(res.data.message);
-        navigate("/home"); // or '/' depending on your routes
+        toast.success("Logged out successfully");
+        navigate("/"); // ✅ FIX
       }
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Logout failed");
     }
   };
@@ -33,23 +35,20 @@ const Navbar = () => {
     <div className="bg-white border-b">
       <div className="flex max-w-7xl mx-auto h-16 items-center justify-between px-4">
         {/* Logo */}
-        <h1 className="text-2xl font-bold cursor-pointer">
-          <Link to="/home">
-            Job<span className="text-[#F83002]">Hunt</span>
-          </Link>
-        </h1>
+        <Link to="/" className="text-2xl font-bold">
+          Job<span className="text-[#F83002]">Hunt</span>
+        </Link>
 
-        {/* Right Side */}
         <div className="flex items-center gap-10">
           <ul className="flex gap-6 font-medium">
-            {user && user.role === "recruiter" ? (
+            {user?.role === "recruiter" ? (
               <>
                 <li><Link to="/admin/companies">Companies</Link></li>
                 <li><Link to="/admin/jobs">Jobs</Link></li>
               </>
             ) : (
               <>
-                <li><Link to="/home">Home</Link></li>
+                <li><Link to="/">Home</Link></li>
                 <li><Link to="/jobs">Jobs</Link></li>
                 <li><Link to="/browse">Browse</Link></li>
               </>
@@ -59,44 +58,38 @@ const Navbar = () => {
           {!user ? (
             <div className="flex gap-2">
               <Link to="/login"><Button variant="outline">Login</Button></Link>
-              <Link to="/signup"><Button className="bg-[#6A38C2] hover:bg-[#36068b]">Signup</Button></Link>
+              <Link to="/signup">
+                <Button className="bg-[#6A38C2] hover:bg-[#36068b]">
+                  Signup
+                </Button>
+              </Link>
             </div>
           ) : (
             <Popover>
               <PopoverTrigger asChild>
                 <Avatar className="cursor-pointer">
-                  <AvatarImage src={user?.profile?.profilePhoto || "https://github.com/shadcn.png"} />
+                  <AvatarImage src={user?.profile?.profilePhoto} />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
               </PopoverTrigger>
 
               <PopoverContent className="w-72">
-                <div className="flex items-center gap-3 mb-4">
-                  <Avatar>
-                    <AvatarImage src={user?.profile?.profilePhoto || "https://github.com/shadcn.png"} />
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h4 className="font-medium">{user?.fullname}</h4>
-                    <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  </div>
+                <div className="mb-3">
+                  <h4 className="font-medium">{user.fullname}</h4>
+                  <p className="text-sm text-gray-500">{user.email}</p>
                 </div>
 
-                {user && user.role === "student" && (
-                  <div className="flex flex-col gap-2 text-gray-600 mb-2">
-                    <Link to="/profile" className="flex items-center gap-2 hover:text-black">
-                      <User2 size={18} />
-                      <span className="text-sm">View Profile</span>
-                    </Link>
-                  </div>
+                {user.role === "student" && (
+                  <Link to="/profile" className="flex gap-2 mb-2">
+                    <User2 size={18} /> Profile
+                  </Link>
                 )}
 
                 <button
                   onClick={logoutHandler}
-                  className="flex items-center gap-2 hover:text-black mt-2"
+                  className="flex gap-2 text-red-600"
                 >
-                  <LogOut size={18} />
-                  <span className="text-sm">Logout</span>
+                  <LogOut size={18} /> Logout
                 </button>
               </PopoverContent>
             </Popover>
