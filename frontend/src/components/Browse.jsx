@@ -1,56 +1,48 @@
-import React from 'react'
-import Navbar from './ui/shared/Navbar'
+import React, { useEffect } from "react";
 
-import Job from './Job'
-
-
-const randomJobs= [1,2,3,4,5,6,7]
-
+import Job from "./Job";
+import { useSelector } from "react-redux";
+import { setSearchedQuery } from "@/redux/jobSlice";
+import { useDispatch } from "react-redux";
 
 const Browse = () => {
+  const { allJobs = [] } = useSelector(store => store.job);
+
+  const dispatch = useDispatch();
+
+useEffect(() => {
+    
+return () => {
+
+dispatch(setSearchedQuery(""))
+}
+
+
+
+  }, []);
+
+
   return (
     <div>
+      
 
+      <div className="max-w-7xl mx-auto my-10">
+        <h1 className="font-bold my-10 text-xl">
+          Search Results : ({allJobs.length})
+        </h1>
 
-
-<div      className='max-w-7xl mx-auto my-10'    >
-
-    <h1 className='font-bold my-10 text-xl'        >Search Results : ({randomJobs.length})</h1>
-
-<div    className='grid grid-cols-3 gap-4 '     >
-
-{
-
-randomJobs.map((item,index) => {
-
-return (
-<Job />
-
-
-
-)
-
-
-})
-
-
-
-
-}
-
-
-</div>
-
-
-
-
-
-
-</div>
-
-
+        {allJobs.length === 0 ? (
+          <p className="text-gray-500 text-center">No jobs found</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {allJobs.map(job => (
+              <Job job={job} key={job._id} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Browse
+export default Browse;

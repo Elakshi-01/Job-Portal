@@ -1,6 +1,8 @@
 import React from "react";
 import * as RadioGroup from "@radix-ui/react-radio-group";
 import { Label } from "@radix-ui/react-label";
+import { useDispatch, useSelector } from "react-redux";
+import { setFilterKeyword } from "@/redux/filterSlice";
 
 const filterData = [
   {
@@ -23,19 +25,27 @@ const filterData = [
 ];
 
 const FilterCard = () => {
-  return (
- <div className="w-72 bg-white rounded-md p-5 h-fit self-start">
+  const dispatch = useDispatch();
+  const { keyword } = useSelector((state) => state.filter);
 
-      <h1 className="font-semibold text-lg text-black">
-        Filter Jobs
-      </h1>
+  const changeHandler = (value) => {
+    dispatch(setFilterKeyword(value));
+  };
+
+  return (
+    <div className="w-72 bg-white rounded-md p-5 h-fit self-start">
+      <h1 className="font-semibold text-lg text-black">Filter Jobs</h1>
 
       <hr className="my-4 border-black" />
 
-      <RadioGroup.Root className="space-y-6">
+      <RadioGroup.Root
+        value={keyword}
+        onValueChange={changeHandler}
+        className="space-y-6"
+      >
         {filterData.map((data, index) => (
           <div key={index}>
-            <h2 className="font-medium    text-bold      text-black mb-3">
+            <h2 className="font-medium text-black mb-3">
               {data.filterType}
             </h2>
 

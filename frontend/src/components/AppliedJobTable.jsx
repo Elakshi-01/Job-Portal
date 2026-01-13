@@ -9,22 +9,11 @@ import {
   TableCell,
 } from "./ui/table";
 import { Badge } from "./ui/badge";
+import { useSelector } from "react-redux";
 
 const AppliedJobTable = () => {
-  const appliedJobs = [
-    {
-      date: "17-07-2025",
-      role: "Frontend Developer",
-      company: "Google",
-      status: "Selected",
-    },
-    {
-      date: "18-07-2025",
-      role: "React Developer",
-      company: "Amazon",
-      status: "Pending",
-    },
-  ];
+  const allAppliedJobs =
+    useSelector((store) => store.job.allAppliedJobs) || [];
 
   return (
     <div className="mt-5">
@@ -41,31 +30,42 @@ const AppliedJobTable = () => {
         </TableHeader>
 
         <TableBody>
-          {appliedJobs.length > 0 ? (
-            appliedJobs.map((job, index) => (
-              <TableRow key={index}>
-                <TableCell>{job.date}</TableCell>
-                <TableCell>{job.role}</TableCell>
-                <TableCell>{job.company}</TableCell>
+          {allAppliedJobs.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center text-gray-500">
+                You haven't applied to any jobs yet
+              </TableCell>
+            </TableRow>
+          ) : (
+            allAppliedJobs.map((appliedJob) => (
+              <TableRow key={appliedJob._id}>
+                <TableCell>
+                  {new Date(appliedJob.createdAt).toLocaleDateString()}
+                </TableCell>
+
+                <TableCell>
+                  {appliedJob?.job?.title || "NA"}
+                </TableCell>
+
+                <TableCell>
+                  {appliedJob?.job?.company?.name || "NA"}
+                </TableCell>
+
                 <TableCell className="text-right">
                   <Badge
                     className={
-                      job.status === "Selected"
+                      appliedJob.status === "Accepted"
                         ? "bg-green-600"
+                        : appliedJob.status === "Rejected"
+                        ? "bg-red-600"
                         : "bg-yellow-500"
                     }
                   >
-                    {job.status}
+                    {appliedJob.status || "Pending"}
                   </Badge>
                 </TableCell>
               </TableRow>
             ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={4} className="text-center text-gray-500">
-                No jobs applied yet
-              </TableCell>
-            </TableRow>
           )}
         </TableBody>
       </Table>

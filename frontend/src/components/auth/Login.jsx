@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../ui/shared/Navbar";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -12,7 +12,7 @@ import axiosInstance from "../../utils/axiosInstance";
 
 const Login = () => {
   const [input, setInput] = useState({ email: "", password: "", role: "" });
-  const { loading } = useSelector((store) => store.auth);
+  const { loading,user } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -38,6 +38,19 @@ const Login = () => {
       dispatch(setLoading(false));
     }
   };
+
+
+
+useEffect(() => {   
+  
+  if(user){
+    navigate("/");
+  }
+}, []);
+
+
+
+
 
   return (
     <div>
