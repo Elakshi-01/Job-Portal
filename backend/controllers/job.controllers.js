@@ -1,4 +1,4 @@
-import { Job } from "../models/job.model.js";
+import Job from "../models/job.model.js";
 
 /* ================= POST JOB ================= */
 export const postJob = async (req, res) => {
@@ -22,19 +22,19 @@ export const postJob = async (req, res) => {
       companyId,
     } = req.body;
 
-    // ✅ FORCE ARRAY (BACKEND SAFETY)
+    // ❌ BLOCK BAD JOBS
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: "Company is required",
+      });
+    }
+
     if (typeof requirements === "string") {
       requirements = requirements
         .split(",")
-        .map((r) => r.trim())
+        .map(r => r.trim())
         .filter(Boolean);
-    }
-
-    if (!requirements || requirements.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one requirement is required",
-      });
     }
 
     const job = await Job.create({
@@ -56,47 +56,52 @@ export const postJob = async (req, res) => {
       job,
     });
   } catch (error) {
-    console.error("POST JOB ERROR:", error);
+    console.error(error);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Server error",
     });
   }
 };
 
 
-/* ================= GET ALL JOBS (PUBLIC) ================= */
-export const getAllJob = async (req, res) => {
+/* ================= GET ALL JOBS ================= */
+export const getAllJobs = async (req, res) => {
   try {
-    const keyword = req.query.keyword || "";
+    const keyword = req.query.keyword?.trim();
 
-    const jobs = await Job.find({
-      $or: [
-        { title: { $regex: keyword, $options: "i" } },
-        { description: { $regex: keyword, $options: "i" } },
-      ],
-    })
-      .populate("company", "name logo createdAt")
+    const query = keyword
+      ? {
+          $or: [
+            { title: { $regex: keyword, $options: "i" } },
+            { description: { $regex: keyword, $options: "i" } },
+            { location: { $regex: keyword, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const jobs = await Job.find(query)
+      .populate("company")
       .sort({ createdAt: -1 });
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       jobs,
+      total: jobs.length,
     });
   } catch (error) {
-    console.error("GET ALL JOB ERROR:", error);
-    return res.status(500).json({
+    console.error(error);
+    res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Failed to fetch jobs",
     });
   }
 };
 
-/* ================= GET ADMIN JOBS (RECRUITER) ================= */
-/* ================= GET ADMIN JOBS (RECRUITER) ================= */
+
+/* ================= GET ADMIN JOBS ================= */
 export const getAdminJobs = async (req, res) => {
   try {
-    // 🔥 FIXED: use correct field name `created_by`
     const jobs = await Job.find({ created_by: req.userId })
       .populate("company", "name")
       .sort({ createdAt: -1 });

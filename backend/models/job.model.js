@@ -6,10 +6,12 @@ const jobSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
     description: {
       type: String,
       required: true,
     },
+
     requirements: {
       type: [String],
       required: true,
@@ -20,36 +22,44 @@ const jobSchema = new mongoose.Schema(
         message: "At least one requirement is required",
       },
     },
+
     salary: {
       type: Number,
       required: true,
     },
+
     experienceLevel: {
       type: String,
       required: true,
     },
+
     location: {
       type: String,
       required: true,
     },
+
     jobType: {
       type: String,
       required: true,
     },
+
     positions: {
       type: Number,
       required: true,
     },
+
     company: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
       required: true,
     },
+
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+
     applications: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -60,4 +70,6 @@ const jobSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Job = mongoose.model("Job", jobSchema);
+const Job = mongoose.model("Job", jobSchema);
+
+export default Job; // ✅ DEFAULT EXPORT (IMPORTANT)

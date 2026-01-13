@@ -8,4 +8,4 @@ export const singleUpload = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB
   },
-}).single("file"); // ✅ FIXED
+}).single("resume"); // ✅ MUST MATCH FRONTEND

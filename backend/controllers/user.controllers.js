@@ -18,13 +18,6 @@ export const register = async (req, res) => {
       return res.status(400).json({ success: false, message: "Email already exists" });
     }
 
-    let profilePhoto = "";
-    if (req.file) {
-      const fileUri = getDataUri(req.file);
-      const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-      profilePhoto = cloudResponse.secure_url;
-    }
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await User.create({
@@ -33,16 +26,16 @@ export const register = async (req, res) => {
       password: hashedPassword,
       phoneNumber,
       role,
-      profile: { profilePhoto },
+      profile: {},
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: "Account created successfully",
     });
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
-    return res.status(500).json({ success: false, message: "Server error" });
+    console.log(error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -51,94 +44,102 @@ export const login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
 
-    if (!email || !password || !role) {
-      return res.status(400).json({ success: false, message: "All fields required" });
-    }
-
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
-    }
+    if (!user) return res.status(400).json({ success: false, message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
-    }
+    if (!isMatch) return res.status(400).json({ success: false, message: "Invalid credentials" });
 
     if (role !== user.role) {
       return res.status(403).json({ success: false, message: "Role mismatch" });
     }
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    return res
-      .cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000,
-      })
-      .status(200)
-      .json({
-        success: true,
-        message: `Welcome ${user.fullname}`,
-        user: {
-          _id: user._id,
-          fullname: user.fullname,
-          email: user.email,
-          role: user.role,
-          phoneNumber: user.phoneNumber,
-          profile: user.profile,
-        },
-      });
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      user: {
+        _id: user._id,
+        fullname: user.fullname,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+        profile: user.profile,
+      },
+    });
   } catch (error) {
-    console.error("LOGIN ERROR:", error);
-    return res.status(500).json({ success: false, message: "Server error" });
+    console.log(error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-/* ================= UPDATE PROFILE ================= */
+/* ================= UPDATE PROFILE (🔥 FIXED) ================= */
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.userId;
-    const { fullname, phoneNumber } = req.body;
 
-    const updateData = { fullname, phoneNumber };
+    const { fullname, email, phoneNumber, bio, skills } = req.body;
+
+    let skillsArray = [];
+    if (skills) {
+      skillsArray = skills.split(",").map(skill => skill.trim());
+    }
+
+    const updateData = {
+      fullname,
+      email,
+      phoneNumber,
+      profile: {
+        bio,
+        skills: skillsArray,
+      },
+    };
 
     if (req.file) {
       const fileUri = getDataUri(req.file);
-      const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-      updateData["profile.profilePhoto"] = cloudResponse.secure_url;
-    }
+      const upload = await cloudinary.uploader.upload(fileUri.content, {
+        resource_type: "raw",
+      });
+
+      updateData.profile.resume = upload.secure_url;
+      updateData.profile.resumeOriginalName = req.file.originalname;
+    } 
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      updateData,
+      { $set: updateData },
       { new: true }
     ).select("-password");
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Profile updated successfully",
       user: updatedUser,
     });
   } catch (error) {
-    console.error("UPDATE PROFILE ERROR:", error);
-    return res.status(500).json({ success: false, message: "Server error" });
+    console.log("UPDATE PROFILE ERROR:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 /* ================= LOGOUT ================= */
 export const logout = async (req, res) => {
-  return res
-    .cookie("token", "", {
-      httpOnly: true,
-      expires: new Date(0),
-      sameSite: "lax",
-    })
-    .status(200)
-    .json({ success: true, message: "Logged out successfully" });
+  res.cookie("token", "", {
+    httpOnly: true,
+    expires: new Date(0),
+    sameSite: "lax",
+  });
+
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 };
